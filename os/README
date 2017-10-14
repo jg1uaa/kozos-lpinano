@@ -1,0 +1,104 @@
+[Japanese]
+
+● 概要
+
+「12ステップで作る 組込みOS自作入門」（坂井弘亮著／カットシステム）で
+H8/3069F向けに作られた組み込みOSであるKOZOS(http://kozos.jp/kozos/)を、
+Orange Pi PC (Allwinner H3, Cortex-A7)で動作するようにしてみました。
+
+ただしOS本体のみの移植とし、ブートローダーはU-Bootを使用します。
+
+
+● 開発環境
+
+OpenBSD-6.2/amd64において、以下のパッケージを使用しました。
+
+	gmake-4.2.1
+	arm-none-eabi-binutils-2.27p0
+	arm-none-eabi-gcc-linaro-6.3.2017.02p2
+	arm-none-eabi-gdb-7.9.1p2
+	arm-none-eabi-newlib-2.2.0.1p1
+	u-boot-arm-2017.09
+
+OpenBSD以外のPC-UNIXであっても、これらに類似したツールチェインを用意できれば
+使用できるものと思われます。
+
+その他（シリアルコンソール用の通信ソフトやテキストエディタ等）については、
+お好みのものを適宜用意してください。
+
+
+● 構築方法
+
+KOZOS自体は、gmakeで構築可能です。
+kozos.elf, kozos, kozos.motが得られます。
+
+
+● 実行方法
+
+ストリップ済みのバイナリ(kozos)をOrange Pi PCへ転送し、実行してください。
+以下の例では、XMODEMでOrange Pi PCへ転送し、実行しています。
+
+	Hit any key to stop autoboot:  0
+	=> loadx
+	## Ready for binary (xmodem) download to 0x42000000 at 115200 bps...
+	C
+	input sx_send_file name:kozos
+	Sending kozos, 587 blocks: Give your local XMODEM receive command now.
+	Bytes Sent:  75264   BPS:9442
+	
+	Transfer complete
+	Modem - CRC mode, 588(SOH)/0(STX)/0(CAN) packets, 1 retries
+	## Total Size      = 0x0001259c = 75164 Bytes
+	=> bootelf
+	CACHE: Misaligned operation at range [41000000, 41000020]
+	CACHE: Misaligned operation at range [41000200, 41002204]
+	CACHE: Misaligned operation at range [41002204, 41002250]
+	CACHE: Misaligned operation at range [41002250, 4100232f]
+	CACHE: Misaligned operation at range [41002330, 4100235c]
+	CACHE: Misaligned operation at range [4100235c, 410027f4]
+	## Starting application at 0x41000200 ...
+	kozos boot succeed!
+	command> echo hello
+	 hello
+	command>
+
+
+● おまけ
+
+オリジナルのKOZOSにない要素として、簡易モニタ(monitor.c, monitor.h)を
+追加しています。例外発生時にモニタが起動するようになっているので、
+何か問題が起こった際にメモリダンプを行う程度のことはできるはずです。
+
+	Data Abort at 41001dac, sp=41fc0068
+	monitor> dw 41fc0068
+	41fc0068: 200001d3 41002873 00000018 41001db4
+	41fc0078: 00000001 41002340 41ffbfbc 00000000
+	41fc0088: 4100235c 00000000 00000019 410028bc
+	41fc0098: 00000000 00000000 0000000c 41001b88
+	monitor> dh
+	41fc00a8: 005f 0000 0000 0000 00c4 41fc 04fc 4100
+	41fc00b8: 0008 0000 23e0 4100 0000 0000 0000 0000
+	41fc00c8: 0000 0000 0000 0000 0000 0000 0000 0000
+	41fc00d8: 0000 0000 0000 0000 0000 0000 1b88 4100
+	monitor> db
+	41fc00e8: 00 00 00 00 00 00 00 00 00 00 00 00 0c 17 00 41
+	41fc00f8: 00 00 00 00 f4 16 00 41 00 00 00 00 00 00 00 00
+	41fc0108: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	41fc0118: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+	monitor>
+	（表示は一部省略しています）
+
+もう一つ、U-Bootを書き込んだOrange Pi起動用のSDカードを作成するための
+補助として、makedisk.shを追加しています（これはOpenBSD専用です）。
+
+以下のように使用してディスクイメージを作成し、
+
+	# ./mkdisk.sh \
+	  /usr/local/share/u-boot/orangepi_pc/u-boot-sunxi-with-spl.bin \
+	  output.img
+
+これをSDカードに書き込んで、起動ディスクとしてください。
+
+	# dd if=output.img of=/dev/rsdNc bs=1M
+
+（/dev/rsdNcは書き込み対象となるSDカードに対応するデバイスを指定します）

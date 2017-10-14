@@ -1,0 +1,72 @@
+OUTPUT_FORMAT("elf32-littlearm")
+OUTPUT_ARCH(arm)
+
+MEMORY
+{
+	ramall(rwx)	: o = 0x41000000, l = 0x01000000 /* 16MB */
+	ramvector(rwx)	: o = 0x41000000, l = 0x00000200 /* top of RAM */
+	ram(rwx)	: o = 0x41000200, l = 0x00fbfe00
+	userstack(rw)	: o = 0x41fc0000, l = 0x00030000
+	stack(rw)	: o = 0x41ff0000, l = 0x00010000 /* end of RAM */
+}
+
+SECTIONS
+{
+	.ramvector : {
+		_ramvector_start = . ;
+		*(.vector)
+		. = ALIGN(4);
+		_ramvector_end = . ;
+	} > ramvector
+
+	.text : {
+		_text_start = . ;
+		*(.text)
+		_etext = . ;
+	} > ram
+
+	.rodata : {
+		_rodata_start = . ;
+		*(.strings)
+		*(.rodata)
+		*(.rodata.*)
+		_erodata = . ;
+	} > ram
+
+	.data : {
+		_data_start = . ;
+		*(.data)
+		. = ALIGN(4);
+		_data_end = . ;
+		_edata = . ;
+	} > ram
+
+	.bss : {
+		_bss_start = . ;
+		*(.bss)
+		*(COMMON)
+		. = ALIGN(4);
+		_bss_end = . ;
+		_ebss = . ;
+	} > ram
+
+	. = ALIGN(4);
+	_end = . ;
+
+	.freearea : {
+		_freearea = . ;
+	} > ram
+
+	.userstack : {
+		_userstack = . ;
+	} > userstack
+
+	.stack : {
+		_sys_stack = . + 0x00000;
+		_svc_stack = . + 0x0c000;
+		_irq_stack = . + 0x0d000;
+		_fiq_stack = . + 0x0e000;
+		_abt_stack = . + 0x0f000;
+		_und_stack = . + 0x10000;
+        } > stack
+}
