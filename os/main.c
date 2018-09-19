@@ -7,13 +7,16 @@
 /* システム・タスクとユーザ・タスクの起動 */
 static int start_threads(int argc, char *argv[])
 {
+  int dummy;
+
   kz_run(consdrv_main, "consdrv",  1, 0x200, 0, NULL);
   kz_run(command_main, "command",  8, 0x200, 0, NULL);
 
   kz_chpri(15); /* 優先順位を下げて，アイドルスレッドに移行する */
   INTR_ENABLE; /* 割込み有効にする */
   while (1) {
-    asm volatile ("wfi"); /* wait for interrupt */
+    /* wait for interrupt */
+    asm volatile ("mcr p15, 0, %0, c7, c0, 4" : "=r"(dummy));
   }
 
   return 0;

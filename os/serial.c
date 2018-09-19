@@ -1,8 +1,8 @@
 #include "serial.h"
 #include "io.h"
 
-#define	UARTBase		0x01c28000	// UART0に固定
-#define	UARTClock		24000000	// Hz
+#define	UARTBase		0x01c25000	// UART0に固定
+#define	UARTClock		100000000	// Hz
 #define	UARTSpeed		115200		// bps
 #define	UARTDivisor		(UARTClock / (UARTSpeed * 16))
 

@@ -3,11 +3,11 @@ OUTPUT_ARCH(arm)
 
 MEMORY
 {
-	ramall(rwx)	: o = 0x41000000, l = 0x01000000 /* 16MB */
-	ramvector(rwx)	: o = 0x41000000, l = 0x00000200 /* top of RAM */
-	ram(rwx)	: o = 0x41000200, l = 0x00fbfe00
-	userstack(rw)	: o = 0x41fc0000, l = 0x00030000
-	stack(rw)	: o = 0x41ff0000, l = 0x00010000 /* end of RAM */
+	ramall(rwx)	: o = 0x80500000, l = 0x00400000 /* 4 MB */
+	ramvector(rwx)	: o = 0x80500000, l = 0x00000200 /* top of RAM */
+	ram(rwx)	: o = 0x80500200, l = 0x003bfe00
+	userstack(rw)	: o = 0x808c0000, l = 0x00030000
+	stack(rw)	: o = 0x808f0000, l = 0x00010000 /* end of RAM */
 }
 
 SECTIONS

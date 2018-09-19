@@ -21,7 +21,7 @@ OBJS += kozos.o syscall.o memory.o consdrv.o command.o
 
 TARGET = kozos
 
-CFLAGS = -Wall -march=armv7-a -ffreestanding -nostdinc -nostdlib
+CFLAGS = -Wall -march=armv5 -ffreestanding -nostdinc -nostdlib
 CFLAGS += -I.
 #CFLAGS += -g
 CFLAGS += -Os

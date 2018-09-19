@@ -4,11 +4,11 @@
 #include "interrupt.h"
 
 /* ソフトウエア・割込みベクタの定義 */
-#define SOFTVEC_TYPE_NUM     160
+#define SOFTVEC_TYPE_NUM     64
 
-#define SOFTVEC_TYPE_SYSCALL 0				// SWI #0
-#define SOFTVEC_TYPE_SOFTERR 1				// SWI #1
-#define SOFTVEC_TYPE_SERINTR 32
+#define SOFTVEC_TYPE_SYSCALL 60				// SWI #60
+#define SOFTVEC_TYPE_SOFTERR 61				// SWI #61
+#define SOFTVEC_TYPE_SERINTR 1
 
 /* 割り込みコントローラ操作部分 */
 void intc_init(void);

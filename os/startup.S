@@ -7,21 +7,23 @@
 	.align 0
 	.global __start
 __start:
-	b	start_entry
+	ldr	pc, =start_entry
 undef_vector:
-	b	undef_entry
+	ldr	pc, =undef_entry
 swi_vector:
-	b	swi_entry
+	ldr	pc, =swi_entry
 prefetch_abort_vector:
-	b	prefetch_abort_entry
+	ldr	pc, =prefetch_abort_entry
 data_abort_vector:
-	b	data_abort_entry
+	ldr	pc, =data_abort_entry
 reserved_vector:
 	b	reserved_vector		// 非対応
 irq_vector:
-	b	irq_entry
+	ldr	pc, =irq_entry
 fiq_vector:
 	b	fiq_vector		// 非対応
+
+	.pool
 
 /* スタートアップ */
 
@@ -45,16 +47,20 @@ start_entry:
 	msr	cpsr_fsxc, #(PSR_M_SVC | PSR_I | PSR_F)
 	ldr	sp, =_svc_stack
 
-	/* ベクタテーブルアドレス(VBAR)を設定 */
-	ldr	r0, =__start
-	mcr	p15, 0, r0, c12, c0, 0
+	/* ベクタ領域をSRAM(0x00000000〜)にコピー */
+	ldr	r1, =_ramvector_start
+	ldr	r2, =_ramvector_end
+	mov	r3, #0
+0:
+	ldmia	r1!, {r0}
+	stmia	r3!, {r0}
+	cmp	r1, r2
+	blt	0b
 
-	/* vector remappingの有効化、MMU無効化 */
+	/* low vector(0x00000000〜)の有効化 */
 	mrc	p15, 0, r0, c1, c0, 0
-	bic	r0, r0, #(1 << 24)	/* clear SCTLR.VE */
-	bic	r0, r0, #(1 << 13)	/* clear SCTLR.V */
+	bic	r0, r0, #(1 << 13)	/* clear V */
 	mcr	p15, 0, r0, c1, c0, 0
-	isb
 
 	/* OS本体はSVCモードで動作し、ユーザプログラムはSYSモードで動作する */
 start_main:
@@ -197,3 +203,19 @@ dispatch:
 	EIT_LEAVE
 
 	.pool
+
+/* 割り込み禁止 */
+	.global intr_disable
+intr_disable:
+	mrs	r0, cpsr
+	orr	r0, r0, #(PSR_I | PSR_F)
+	msr	cpsr_c, r0
+	bx	lr
+
+	/* 割り込み許可 */
+	.global intr_enable
+intr_enable:
+	mrs	r0, cpsr
+	bic	r0, r0, #(PSR_I | PSR_F)
+	msr	cpsr_c, r0
+	bx	lr
